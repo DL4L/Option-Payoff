@@ -7,6 +7,7 @@ import plotly.express as px
 from dash.dependencies import State, Input, Output, ALL
 from dash.exceptions import PreventUpdate
 
+
 from Opt import Stock, Strategies
 import pandas as pd
 import os
@@ -519,8 +520,20 @@ def update_frontend_choices():
         payoff = strategy.calculate_portfolio_payoff()
         S = [p for p in range(0,int(stock.underlying*2))]
         fig = px.line(x = S,y= payoff)
+        
+        """
+        if abs(min(payoff)) > abs(max(payoff)):
+            if payoff_count[payoff[0]] > 1:  ## If the min is displayed along horizontal line rather than bottom of slope
+                fig.update_layout(xaxis=dict(range=[int(stock.underlying*0.9), int(stock.underlying*1.1)]),
+                    yaxis=dict(range=[int(min(payoff)-15), int(max(payoff)+50)]))
+            else:
+                fig.update_layout(xaxis=dict(range=[int(stock.underlying*0.9), int(stock.underlying*1.1)]),
+                        yaxis=dict(range=[int(min(payoff)*0.1), int(max(payoff)+50)]))
+        else:
+            fig.update_layout(xaxis=dict(range=[int(stock.underlying*0.9), int(stock.underlying*1.1)]),
+                          yaxis=dict(range=[int(min(payoff)-15), int(max(payoff)*0.1)]))"""
         fig.update_layout(xaxis=dict(range=[int(stock.underlying*0.9), int(stock.underlying*1.1)]),
-                          yaxis=dict(range=[int(min(payoff)-200), int(max(payoff)+200)]))
+                          yaxis=dict(range=[-15, 15]))
         fig.update_yaxes(title_text="Profit/Loss")
         fig.update_xaxes(title_text="Underlying Price")
     return options_text_list, fig
