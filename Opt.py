@@ -48,7 +48,7 @@ class Stock():
         c_range_lower = max(0,c_strike_idx - (len(calls)-c_strike_idx))
         calls = calls[c_range_lower:]
         calls.reset_index(inplace=True,drop=True)
-        calls = calls[["Strike","Change","% Change","Bid","Ask","Last Price"]]
+        #calls = calls[["Strike","Change","% Change","Bid","Ask","Last Price"]]
 
         
         #calls = calls[max(0,c_strike_idx-10):min(len(calls),c_strike_idx+11)]
