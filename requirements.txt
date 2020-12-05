@@ -1,3 +1,4 @@
+beautifulsoup4==4.5.1
 dash==1.16.3
 dash-bootstrap-components==0.10.7
 dash-core-components==1.12.1
