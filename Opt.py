@@ -71,8 +71,8 @@ class Stock():
        # if int(hour) < 10:
        #     pass
 
-        self.calls_formatted = calls
-        self.puts_formatted = puts
+        self.calls_formatted = calls.copy()
+        self.puts_formatted = puts.copy()
         return calls,puts,new_c_strike_index,new_p_strike_index
 
     def get_closests(self,df, col, val):
