@@ -543,7 +543,7 @@ def update_frontend_choices():
                     [Input('dummy-output','children')])
 def make_button_callbacks(child):
     print("Change to dummy output")"""
-
+"""
 @app.callback(
     Output('dummy-output-2', 'children'),
     [Input({'type':"delete",'index':ALL}, 'n_clicks')]
@@ -557,7 +557,7 @@ def delete_button(*args):
     #    opt_id = args[1]
     #    strategy.remove_option_from_portfolio(opt_id)
     #    update_frontend_choices()
-
+"""
 
 """
 def return_choices(strategy_dict):
