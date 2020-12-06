@@ -13,7 +13,8 @@ class Stock():
         self.date = date
         self.underlying = self.get_underlying_price()
         self.tickers_select = [{"label":i,"value":i} for i in stock_info.tickers_dow()] + [{"label": "SPY", "value": "SPY"}]
-        
+        self.calls_formatted = None
+        self.puts_formatted = None
 
     def update_ticker(self,ticker):
         self.ticker = ticker
