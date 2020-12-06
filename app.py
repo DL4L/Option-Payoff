@@ -11,7 +11,8 @@ from dash.exceptions import PreventUpdate
 from Opt import Stock, Strategies
 import pandas as pd
 import os
-
+stock = Stock()
+strategy = Strategies()
 app = dash.Dash(
     __name__,
     meta_tags=[
@@ -25,8 +26,7 @@ server = app.server
 
 app.config["suppress_callback_exceptions"] = True
 
-stock = Stock()
-strategy = Strategies()
+
 
 tabs_styles = {
     'height': '44px'
