@@ -117,8 +117,6 @@ class Strategies():
     def reset(self):
         self.direction = '1'
 
-        self.strategies_map = {1:self.long_call,2:self.long_put,3:self.short_call,4:self.short_put}
-
         self.current = {"Buy":{"Calls":set(),     #### Use either self.current nested dict or self.current_portfolio structure of options objects
                                 "Puts":set()},
                         "Sell":{"Calls":set(),
