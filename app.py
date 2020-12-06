@@ -193,7 +193,6 @@ app.layout = html.Div(
         
     ],
 )
-trigger  [{'prop_id': 'buy-call-stats-table.selected_rows', 'value': []}, {'prop_id': 'sell-call-stats-table.selected_rows', 'value': []}, {'prop_id': 'buy-puts-stats-table.selected_rows', 'value': []}, {'prop_id': 'sell-puts-stats-table.selected_rows', 'value': []}]
 
 """@app.callback([Output("buy-calls-stats-container","style")],
               Input('tabs-buy-sell', 'value'))
