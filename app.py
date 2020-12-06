@@ -26,7 +26,6 @@ server = app.server
 app.config["suppress_callback_exceptions"] = True
 app.enable_dev_tools(
     dev_tools_ui=True,
-    dev_tools_serve_dev_bundles=True,
 )
 stock = Stock()
 strategy = Strategies()
