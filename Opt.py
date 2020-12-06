@@ -63,11 +63,11 @@ class Stock():
         new_c_strike_index,new_p_strike_index = self.get_closests(calls,"Strike",self.underlying),self.get_closests(puts,"Strike",self.underlying)
         #puts = puts[max(0,p_strike_idx-10):min(len(puts),p_strike_idx+11)]
 
-        et_time = datetime.datetime.now(timezone('US/Eastern'))
-        fmt = "%H"
-        hour = et_time.strftime(fmt)
-        if int(hour) < 10:
-            pass
+       # et_time = datetime.datetime.now(timezone('US/Eastern'))
+       # fmt = "%H"
+       # hour = et_time.strftime(fmt)
+       # if int(hour) < 10:
+       #     pass
 
         self.calls_formatted = calls
         self.puts_formatted = puts
