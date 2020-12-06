@@ -493,7 +493,7 @@ def select_option_from_chain(buy_call_selected_rows,sell_call_selected_rows,buy_
                     #return output_state + strategy.direction + ' %s Put for %s '%(row["Strike"],row["Bid"])
 
         print("Current Portfolio: ", strategy.current_portfolio)
-        return '',{}
+        
         #print("Current Strat", strategy.current)
 
     if n_clicks and ctx.triggered and 'delete' in ctx.triggered[0]["prop_id"]:
