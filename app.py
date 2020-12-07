@@ -453,7 +453,7 @@ def select_option_from_chain(buy_call_selected_rows,sell_call_selected_rows,buy_
                 print("direction = ", strategy.direction)
                 #print("Selected Row Data", row)
                 if strategy.direction =='1':
-                    strategy.update_current("Buy","Calls",idx)
+                    #strategy.update_current("Buy","Calls",idx)
                     opt = strategy.create_option(strategy.direction,"call",row["Strike"],row["Ask"],"BC_%s"%(idx),stock.underlying)
                     strategy.add_option_to_portfolio(opt)
                     #return output_state + '\n' + strategy.direction + ' %s Call for %s '%(row["Strike"],row["Ask"])
@@ -464,7 +464,7 @@ def select_option_from_chain(buy_call_selected_rows,sell_call_selected_rows,buy_
                 row = stock.calls_formatted.iloc[idx]
                 print("direction = ", strategy.direction)
                 if strategy.direction =='-1':
-                    strategy.update_current("Sell","Calls",idx)
+                    #strategy.update_current("Sell","Calls",idx)
                     opt = strategy.create_option(strategy.direction,"call",row["Strike"],row["Bid"],"SC_%s"%(idx),stock.underlying)
                     strategy.add_option_to_portfolio(opt)
                     #return output_state + '\n' + strategy.direction + ' %s Call for %s '%(row["Strike"],row["Bid"])
@@ -476,7 +476,7 @@ def select_option_from_chain(buy_call_selected_rows,sell_call_selected_rows,buy_
                 
                 #print("Selected Row Data", row)
                 if strategy.direction =='1':
-                    strategy.update_current("Buy","Puts",idx)
+                    #strategy.update_current("Buy","Puts",idx)
                     opt = strategy.create_option(strategy.direction,"put",row["Strike"],row["Ask"],"BP_%s"%(idx),stock.underlying)
                     strategy.add_option_to_portfolio(opt)
                     #return output_state + strategy.direction + ' %s Put for %s '%(row["Strike"],row["Ask"])
@@ -487,7 +487,7 @@ def select_option_from_chain(buy_call_selected_rows,sell_call_selected_rows,buy_
                 idx = sell_puts_selected_rows[-1]
                 row = stock.puts_formatted.iloc[idx]
                 if strategy.direction =='-1':
-                    strategy.update_current("Sell","Puts",idx)
+                    #strategy.update_current("Sell","Puts",idx)
                     opt = strategy.create_option(strategy.direction,"put",row["Strike"],row["Bid"],"SP_%s"%(idx),stock.underlying)
                     strategy.add_option_to_portfolio(opt)
                     #return output_state + strategy.direction + ' %s Put for %s '%(row["Strike"],row["Bid"])
