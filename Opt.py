@@ -4,12 +4,13 @@ import pandas as pd
 from bisect import bisect_left, bisect_right
 import datetime  
 from pytz import timezone
+import pickle
 
 class Stock():
 
     def __init__ (self,date=None):
 
-        self.ticker = "SPY"
+        self.ticker = "AAPL"
         self.date = date
         self.underlying = self.get_underlying_price()
         self.tickers_select = [{"label":i,"value":i} for i in stock_info.tickers_dow()] + [{"label": "SPY", "value": "SPY"}]
@@ -28,7 +29,16 @@ class Stock():
         return round(stock_info.get_live_price(self.ticker),2)
     
     def get_options_expirations(self):
-        return [{"label":i,"value":i} for i in options.get_expiration_dates(self.ticker)]
+        
+        et_time = datetime.datetime.now(timezone('US/Eastern'))
+        fmt = "%H"
+        hour = et_time.strftime(fmt)
+        if int(hour) < 10:
+            filename = 'Chains/' + self.ticker + '_' + 'expirations.pickle'
+            expirations = pickle.load(open( filename, "rb" ))
+        else:
+            expirations = options.get_expiration_dates(self.ticker)
+        return [{"label":i,"value":i} for i in expirations]
         
     def get_options_chain(self,expiry_date=None):
         """
@@ -41,8 +51,16 @@ class Stock():
         return options.get_options_chain(self.ticker,expiry_date)
 
     def get_calls_and_puts_formated(self,expiry_date=None):
-        
-        chain = options.get_options_chain(self.ticker,expiry_date)
+
+                
+        et_time = datetime.datetime.now(timezone('US/Eastern'))
+        fmt = "%H"
+        hour = et_time.strftime(fmt)
+        if int(hour) < 10:
+            chain = self.get_calls_and_puts_formated_old_prices(expiry_date)
+        else:
+            chain = options.get_options_chain(self.ticker,expiry_date)
+
         calls = chain['calls']
         
         c_strike_idx = self.get_closests(calls,"Strike",self.underlying)
@@ -65,15 +83,17 @@ class Stock():
         new_c_strike_index,new_p_strike_index = self.get_closests(calls,"Strike",self.underlying),self.get_closests(puts,"Strike",self.underlying)
         #puts = puts[max(0,p_strike_idx-10):min(len(puts),p_strike_idx+11)]
 
-       # et_time = datetime.datetime.now(timezone('US/Eastern'))
-       # fmt = "%H"
-       # hour = et_time.strftime(fmt)
-       # if int(hour) < 10:
-       #     pass
+
 
         self.calls_formatted = calls.copy()
         self.puts_formatted = puts.copy()
         return calls,puts,new_c_strike_index,new_p_strike_index
+    
+    def get_calls_and_puts_formated_old_prices(self,expiry_date=None):
+
+        filename = 'Chains/' + self.ticker + '_' + expiry_date + '.pickle'
+        chain = pickle.load(open( filename, "rb" ))
+        return chain
 
     def get_closests(self,df, col, val):
         lower_idx = bisect_left(df[col].values, val)

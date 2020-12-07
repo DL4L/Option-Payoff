@@ -4,6 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
 import plotly.express as px
+import plotly.io as pio
 from dash.dependencies import State, Input, Output, ALL
 from dash.exceptions import PreventUpdate
 
@@ -66,7 +67,7 @@ def build_upper_left_panel():
                             dcc.Dropdown(
                                 id="ticker-select",
                                 options=stock.tickers_select,
-                                value="SPY",
+                                value="AAPL",
                             ),
                         ],
                     ),
@@ -154,7 +155,7 @@ app.layout = html.Div(
             id="banner",
             className="banner",
             children=[
-                html.H6("Dash Clinical Analytics"),
+                html.H6("Option Strategy & Payoff Calculator"),
 
             ],
         ),
@@ -521,7 +522,7 @@ def update_frontend_choices():
     if options_text_list:
         payoff = strategy.calculate_portfolio_payoff()
         S = [p for p in range(0,int(stock.underlying*2))]
-        fig = px.line(x = S,y= payoff)
+        fig = px.line(x = S,y= payoff,template="plotly_dark")
         
         """
         if abs(min(payoff)) > abs(max(payoff)):
