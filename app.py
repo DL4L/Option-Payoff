@@ -186,9 +186,15 @@ app.layout = html.Div(
                                 )
                             ],
                         ),
+                        html.Div(id="profit-loss-breakdown",children=[
+                            html.P(id="max-gain"),
+                            html.P(id="max-loss")
+                        ])
                     ],
                 ),
+                
             ],
+            
         ),
 
         
@@ -429,7 +435,7 @@ def update_strategy(strat):
     return '',[]
 
 @app.callback(
-    [Output("dummy-output","children"),Output("option-payoff-graph","figure")],
+    [Output("dummy-output","children"),Output("option-payoff-graph","figure"),Output("max-gain","children"),Output("max-loss","children")],
     [Input('buy-call-stats-table', 'selected_rows'),Input('sell-call-stats-table', 'selected_rows'),
     Input('buy-puts-stats-table', 'selected_rows'),Input('sell-puts-stats-table', 'selected_rows'),
     Input({'type':"delete",'index':ALL}, 'n_clicks'),Input("strategy-desc","children")]
@@ -441,7 +447,7 @@ def select_option_from_chain(buy_call_selected_rows,sell_call_selected_rows,buy_
         print("STRAT")
         print("strategy state: ", ctx.triggered)
         strategy.reset()
-        return '',{}
+        return '',{},'',''
         #print("current state: ", output_state)
 
     if ctx.triggered and 'selected_rows' in ctx.triggered[0]["prop_id"]:
@@ -521,6 +527,8 @@ def update_frontend_choices():
                                                 ))
     print(['delete-%s'%(i)for i in strategy.current_portfolio])
     fig = {}
+    max_gain = ""
+    max_loss = ""
     if options_text_list:
         payoff = strategy.calculate_portfolio_payoff()
         S = [p for p in range(0,int(stock.underlying*2))]
@@ -541,7 +549,11 @@ def update_frontend_choices():
                           yaxis=dict(range=[-30, 30]))
         fig.update_yaxes(title_text="Profit/Loss")
         fig.update_xaxes(title_text="Underlying Price")
-    return options_text_list, fig
+    
+        max_gain = strategy.max_gain(payoff)
+        max_loss = strategy.max_loss(payoff)
+
+    return options_text_list, fig, max_gain, max_loss
 
 
 """@app.callback(Output('dummy-output-2', 'style'),

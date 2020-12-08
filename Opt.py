@@ -221,6 +221,39 @@ class Strategies():
         result = list(map(sum,zip(*lists)))
         return result
         #print("Payoff: ", result)
+    
+    def max_gain(self,payoff):
+
+        max_p = max(payoff)
+
+        if payoff[0] == max_p: #### Short Underlying
+            if payoff[2] < payoff[1] < payoff[0]:
+                return "Max Profit: Infinite"
+            else:
+                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p,2)*100)
+        elif payoff[-1] == max_p: ### Long Underlying
+            if payoff[-3] < payoff[-2] < payoff[-1]:
+                return "Max Profit: Infinite"
+            else:
+                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p,2)*100)
+        else:
+            return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p,2)*100)
+    def max_loss(self,payoff):
+
+        max_l = min(payoff)
+
+        if payoff[0] == max_l: #### Short Underlying
+            if payoff[2] > payoff[1] > payoff[0]:
+                return "Max Loss: Infinite"
+            else:
+                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l,2)*100)
+        elif payoff[-1] == max_l: ### Long Underlying
+            if payoff[-3] > payoff[-2] > payoff[-1]:
+                return "Max Loss: Infinite"
+            else:
+                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l,2)*100)
+        else:
+            return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l,2)*100)
 
 class Option():
 

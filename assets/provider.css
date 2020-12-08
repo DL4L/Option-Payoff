@@ -308,3 +308,12 @@ div#moneyness {
   position: relative;
   margin-left: 24px;
 }
+div#geo-map-outer {
+  position: relative;
+}
+
+div#profit-loss-breakdown {
+  position: absolute;
+  bottom: 60px;
+  font-size: large;
+}
