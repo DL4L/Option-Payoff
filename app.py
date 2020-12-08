@@ -127,6 +127,8 @@ def build_upper_left_panel():
                             html.P("Out the Money",id="otm"),
                             html.P("At the Money",id="atm")
                             ]),
+                           
+                            html.P(stock.live_price_comment),
                             dcc.Loading(children=html.Div(id="buy-calls-stats-container")),
                             dcc.Loading(children=html.Div(id="sell-calls-stats-container")),
                             dcc.Loading(children=html.Div(id="buy-puts-stats-container")),

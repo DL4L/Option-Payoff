@@ -16,7 +16,20 @@ class Stock():
         self.tickers_select = [{"label":i,"value":i} for i in stock_info.tickers_dow()] + [{"label": "SPY", "value": "SPY"}]
         self.calls_formatted = None
         self.puts_formatted = None
-
+        self.live_price = self.live_prices_released()
+        
+        if self.live_price:
+            self.live_price_comment = ''
+        else:
+            self.live_price_comment = "* Prices displayed are not current. Live prices released around 3pm GMT"
+    def live_prices_released(self):
+        et_time = datetime.datetime.now(timezone('US/Eastern'))
+        fmt = "%H"
+        hour = et_time.strftime(fmt)
+        print("HOUR: ", hour)
+        if int(hour) < 10:
+            return False
+        return True
     def update_ticker(self,ticker):
         self.ticker = ticker
         self.underlying = self.get_underlying_price()
@@ -30,10 +43,8 @@ class Stock():
     
     def get_options_expirations(self):
         
-        et_time = datetime.datetime.now(timezone('US/Eastern'))
-        fmt = "%H"
-        hour = et_time.strftime(fmt)
-        if int(hour) < 10:
+
+        if not self.live_prices_released():
             filename = 'Chains/' + self.ticker + '_' + 'expirations.pickle'
             expirations = pickle.load(open( filename, "rb" ))
         else:
@@ -53,10 +64,7 @@ class Stock():
     def get_calls_and_puts_formated(self,expiry_date=None):
 
                 
-        et_time = datetime.datetime.now(timezone('US/Eastern'))
-        fmt = "%H"
-        hour = et_time.strftime(fmt)
-        if int(hour) < 10:
+        if not self.live_prices_released():
             chain = self.get_calls_and_puts_formated_old_prices(expiry_date)
         else:
             chain = options.get_options_chain(self.ticker,expiry_date)
