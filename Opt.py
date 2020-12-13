@@ -231,14 +231,14 @@ class Strategies():
             if payoff[2] < payoff[1] < payoff[0]:
                 return "Max Profit: Infinite"
             else:
-                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2)
+                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2))
         elif payoff[-1] == max_p: ### Long Underlying
             if payoff[-3] < payoff[-2] < payoff[-1]:
                 return "Max Profit: Infinite"
             else:
-                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2)
+                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2))
         else:
-            return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2)
+            return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2))
     def max_loss(self,payoff):
 
         max_l = min(payoff)
@@ -247,14 +247,14 @@ class Strategies():
             if payoff[2] > payoff[1] > payoff[0]:
                 return "Max Loss: Infinite"
             else:
-                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2)
+                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2))
         elif payoff[-1] == max_l: ### Long Underlying
             if payoff[-3] > payoff[-2] > payoff[-1]:
                 return "Max Loss: Infinite"
             else:
-                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2)
+                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2))
         else:
-            return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2)
+            return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2))
 
 class Option():
 
