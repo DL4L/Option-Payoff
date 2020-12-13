@@ -529,7 +529,10 @@ def update_frontend_choices():
     fig = {}
     max_gain = ""
     max_loss = ""
+    
     if options_text_list:
+        ave_strike = sum([strategy.current_portfolio[i].strike for i in strategy.current_portfolio])/len(strategy.current_portfolio)
+        print("Average Strike: ", ave_strike)
         payoff = strategy.calculate_portfolio_payoff()
         S = [p for p in range(0,int(stock.underlying*2))]
         fig = px.line(x = S,y= payoff,template="plotly_dark")
@@ -545,7 +548,9 @@ def update_frontend_choices():
         else:
             fig.update_layout(xaxis=dict(range=[int(stock.underlying*0.9), int(stock.underlying*1.1)]),
                           yaxis=dict(range=[int(min(payoff)-15), int(max(payoff)*0.1)]))"""
-        fig.update_layout(xaxis=dict(range=[int(stock.underlying*0.9), int(stock.underlying*1.1)]),
+        #fig.update_layout(xaxis=dict(range=[int(stock.underlying*0.9), int(stock.underlying*1.1)]),
+        #                  yaxis=dict(range=[-30, 30]))
+        fig.update_layout(xaxis=dict(range=[int(ave_strike*0.9), int(ave_strike*1.1)]),
                           yaxis=dict(range=[-30, 30]))
         fig.update_yaxes(title_text="Profit/Loss")
         fig.update_xaxes(title_text="Underlying Price")
