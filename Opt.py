@@ -132,6 +132,7 @@ class Strategies():
                                             "Sell one OTM or ATM put with a strike price closer to the price of the underlying",
                                             "Sell one OTM or ATM call with a strike price above the current price of the underlying asset",
                                             "Buy one OTM call with a strike price further above the current price of the underlying asset"]},
+       
                                             }
         self.direction = '1'
 
@@ -230,14 +231,14 @@ class Strategies():
             if payoff[2] < payoff[1] < payoff[0]:
                 return "Max Profit: Infinite"
             else:
-                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p,2)*100)
+                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2)
         elif payoff[-1] == max_p: ### Long Underlying
             if payoff[-3] < payoff[-2] < payoff[-1]:
                 return "Max Profit: Infinite"
             else:
-                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p,2)*100)
+                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2)
         else:
-            return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p,2)*100)
+            return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2)
     def max_loss(self,payoff):
 
         max_l = min(payoff)
@@ -246,14 +247,14 @@ class Strategies():
             if payoff[2] > payoff[1] > payoff[0]:
                 return "Max Loss: Infinite"
             else:
-                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l,2)*100)
+                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2)
         elif payoff[-1] == max_l: ### Long Underlying
             if payoff[-3] > payoff[-2] > payoff[-1]:
                 return "Max Loss: Infinite"
             else:
-                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l,2)*100)
+                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2)
         else:
-            return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l,2)*100)
+            return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2)
 
 class Option():
 
