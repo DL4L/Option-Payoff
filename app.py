@@ -129,6 +129,7 @@ def build_upper_left_panel():
                             ]),
                            
                             html.P(stock.live_price_comment),
+                            html.P("Select Options Below"),
                             dcc.Loading(children=html.Div(id="buy-calls-stats-container")),
                             dcc.Loading(children=html.Div(id="sell-calls-stats-container")),
                             dcc.Loading(children=html.Div(id="buy-puts-stats-container")),
