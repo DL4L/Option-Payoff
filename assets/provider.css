@@ -313,7 +313,5 @@ div#geo-map-outer {
 }
 
 div#profit-loss-breakdown {
-  position: absolute;
-  bottom: 60px;
   font-size: large;
 }

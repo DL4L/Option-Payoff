@@ -2,205 +2,123 @@ from yahoo_fin import options
 from yahoo_fin import stock_info
 import pandas as pd
 from bisect import bisect_left, bisect_right
-import datetime  
+import datetime
 from pytz import timezone
 import pickle
+from dateutil import parser
+from scipy.stats import norm
+import numpy as np
 
-class Stock():
-
-    def __init__ (self,date=None):
-
-        self.ticker = "AAPL"
-        self.date = date
-        self.underlying = self.get_underlying_price()
-        self.tickers_select = [{"label":i,"value":i} for i in stock_info.tickers_dow()] + [{"label": "SPY", "value": "SPY"}]
-        self.calls_formatted = None
-        self.puts_formatted = None
-        self.live_price = self.live_prices_released()
-        
-        if self.live_price:
-            self.live_price_comment = ''
-        else:
-            self.live_price_comment = "* Prices displayed are not current. Live prices released around 3pm GMT"
-    def live_prices_released(self):
-        et_time = datetime.datetime.now(timezone('US/Eastern'))
-        fmt = "%H"
-        hour = et_time.strftime(fmt)
-        print("HOUR: ", hour)
-        if int(hour) < 10:
-            return False
-        return True
-    def update_ticker(self,ticker):
-        self.ticker = ticker
-        self.underlying = self.get_underlying_price()
-    def get_underlying(self,start_date=None,end_date=None):
-
-        return stock_info.get_data(self.ticker,start_date,end_date)
-
-    def get_underlying_price(self,start_date=None,end_date=None):
-
-        return round(stock_info.get_live_price(self.ticker),2)
-    
-    def get_options_expirations(self):
-        
-
-        if not self.live_prices_released():
-            filename = 'Chains/' + self.ticker + '_' + 'expirations.pickle'
-            expirations = pickle.load(open( filename, "rb" ))
-        else:
-            expirations = options.get_expiration_dates(self.ticker)
-        return [{"label":i,"value":i} for i in expirations]
-        
-    def get_options_chain(self,expiry_date=None):
-        """
-        Extracts call / put option tables for input ticker and expiration date.  If
-        no date is input, the default result will be the earliest expiring
-        option chain from the current date.
-
-        @param: date
-        """
-        return options.get_options_chain(self.ticker,expiry_date)
-
-    def get_calls_and_puts_formated(self,expiry_date=None):
-
-                
-        if not self.live_prices_released():
-            chain = self.get_calls_and_puts_formated_old_prices(expiry_date)
-        else:
-            chain = options.get_options_chain(self.ticker,expiry_date)
-
-        calls = chain['calls']
-        
-        c_strike_idx = self.get_closests(calls,"Strike",self.underlying)
-        print("c_idx: ", c_strike_idx, "len: ", len(calls))
-        c_range_lower = max(0,c_strike_idx - (len(calls)-c_strike_idx))
-        calls = calls[c_range_lower:]
-        calls.reset_index(inplace=True,drop=True)
-        calls = calls[["Strike","Change","% Change","Bid","Ask","Last Price"]]
-
-        
-        #calls = calls[max(0,c_strike_idx-10):min(len(calls),c_strike_idx+11)]
-        puts = chain['puts']
-        
-        p_strike_idx = self.get_closests(puts,"Strike",self.underlying)
-        print("p_idx: ", p_strike_idx,  "len: ", len(puts))
-        p_range_lower = max(0,p_strike_idx - (len(puts)-p_strike_idx))
-        puts = puts[p_range_lower:].reset_index()
-        puts = puts[["Strike","Change","% Change","Bid","Ask"]]
-        print("Underlying Check",self.underlying)
-        new_c_strike_index,new_p_strike_index = self.get_closests(calls,"Strike",self.underlying),self.get_closests(puts,"Strike",self.underlying)
-        #puts = puts[max(0,p_strike_idx-10):min(len(puts),p_strike_idx+11)]
+from Stock import *
 
 
+def d1_calc(S, K, r, vol, T, t):
+    # Calculates d1 in the BSM equation
+    return (np.log(S/K) + (r + 0.5 * vol**2)*(T-t))/(vol*np.sqrt(T-t))
 
-        self.calls_formatted = calls.copy()
-        self.puts_formatted = puts.copy()
-        return calls,puts,new_c_strike_index,new_p_strike_index
-    
-    def get_calls_and_puts_formated_old_prices(self,expiry_date=None):
 
-        filename = 'Chains/' + self.ticker + '_' + expiry_date + '.pickle'
-        chain = pickle.load(open( filename, "rb" ))
-        return chain
+def calc_delta(S, K, r, vol, T, t, otype):
+    d1 = d1_calc(S, K, r, vol, T, t)
+    d2 = d1 - vol * np.sqrt(T-t)
 
-    def get_closests(self,df, col, val):
-        lower_idx = bisect_left(df[col].values, val)
-        higher_idx = bisect_right(df[col].values, val)
-        if higher_idx == lower_idx:      #val is not in the list
-            if abs(val - df[col].iloc[lower_idx]) <= abs(val - df[col].iloc[lower_idx - 1]): # return index closest to val
-                return lower_idx
-            else:
-                return lower_idx - 1
-            
-        else:                            #val is in the list
-            return lower_idx
+    if(otype == "call"):
+        delta = np.exp(-(T-t))*norm.cdf(d1)
+    elif(otype == "put"):
+        delta = -np.exp(-(T-t))*norm.cdf(-d1)
+
+    return round(delta, 2)
+
 
 class Strategies():
 
-    def __init__ (self):
+    def __init__(self):
 
         self.strategies_select = [{"label": "Long Strangle", "value": "Long Strangle"},
-        {"label": "Straddle", "value": "Straddle"},
-        {"label": "Iron Condor", "value": "Iron Condor"},
-        ]
+                                  {"label": "Straddle", "value": "Straddle"},
+                                  {"label": "Iron Condor", "value": "Iron Condor"},
+                                  ]
 
-        self.strategies_descs = {"Long Strangle":{'desc':'Buy a call and a put option with different strike prices, but with the same expiration and underlying. A strangle is a good strategy if you think the underlying security will experience a large price movement in the near future but are unsure of the direction.The risk on the trade is limited to the premium paid for the two options.',
-                                'action':["Buy an OTM call","Buy an OTM put"]},
-        "Straddle":{'desc':'Buy a put and call ATM with the same strike price and expiration. A long straddle profits when the price of the security rises or falls from the strike price by an amount more than the total cost of the premium paid.','action':["Buy an ATM put", "Buy an ATM call"]},
-        "Iron Condor":{'desc':'An iron condor consists of two puts (one long and one short) and two calls (one long and one short), and four strike prices, all with the same expiration. The goal is to profit from low volatility in the underlying asset. It earns the maximum profit when the underlying asset closes between the middle strike prices at expiration',
-        'action':["Buy one OTM put with a strike price below the price of the underlying",
-                                            "Sell one OTM or ATM put with a strike price closer to the price of the underlying",
-                                            "Sell one OTM or ATM call with a strike price above the current price of the underlying asset",
-                                            "Buy one OTM call with a strike price further above the current price of the underlying asset"]},
-       
-                                            }
+        self.strategies_descs = {"Long Strangle": {'desc': 'Buy a call and a put option with different strike prices, but with the same expiration and underlying. A strangle is a good strategy if you think the underlying security will experience a large price movement in the near future but are unsure of the direction.The risk on the trade is limited to the premium paid for the two options.',
+                                                   'action': ["Buy an OTM call", "Buy an OTM put"]},
+                                 "Straddle": {'desc': 'Buy a put and call ATM with the same strike price and expiration. A long straddle profits when the price of the security rises or falls from the strike price by an amount more than the total cost of the premium paid.', 'action': ["Buy an ATM put", "Buy an ATM call"]},
+                                 "Iron Condor": {'desc': 'An iron condor consists of two puts (one long and one short) and two calls (one long and one short), and four strike prices, all with the same expiration. The goal is to profit from low volatility in the underlying asset. It earns the maximum profit when the underlying asset closes between the middle strike prices at expiration',
+                                                 'action': ["Buy one OTM put with a strike price below the price of the underlying",
+                                                            "Sell one OTM or ATM put with a strike price closer to the price of the underlying",
+                                                            "Sell one OTM or ATM call with a strike price above the current price of the underlying asset",
+                                                            "Buy one OTM call with a strike price further above the current price of the underlying asset"]},
+
+                                 }
         self.direction = '1'
 
-        self.strategies_map = {1:self.long_call,2:self.long_put,3:self.short_call,4:self.short_put}
+        self.strategies_map = {
+            1: self.long_call, 2: self.long_put, 3: self.short_call, 4: self.short_put}
 
-        self.current = {"Buy":{"Calls":set(),     #### Use either self.current nested dict or self.current_portfolio structure of options objects
-                                "Puts":set()},
-                        "Sell":{"Calls":set(),
-                                "Puts":set()}}
+        self.current = {"Buy": {"Calls": set(),  # Use either self.current nested dict or self.current_portfolio structure of options objects
+                                "Puts": set()},
+                        "Sell": {"Calls": set(),
+                                 "Puts": set()}}
 
         self.current_portfolio = {}
+
     def reset(self):
         self.direction = '1'
 
-        self.current = {"Buy":{"Calls":set(),     #### Use either self.current nested dict or self.current_portfolio structure of options objects
-                                "Puts":set()},
-                        "Sell":{"Calls":set(),
-                                "Puts":set()}}
+        self.current = {"Buy": {"Calls": set(),  # Use either self.current nested dict or self.current_portfolio structure of options objects
+                                "Puts": set()},
+                        "Sell": {"Calls": set(),
+                                 "Puts": set()}}
 
         self.current_portfolio = {}
-    # S = stock underlying # K = strike price # Price = premium paid for option 
-    def long_call(self,S, K, Price):
-        # Long Call Payoff = max(Stock Price - Strike Price, 0)     # If we are long a call, we would only elect to call if the current stock price is greater than     # the strike price on our option     
+    # S = stock underlying # K = strike price # Price = premium paid for option
+
+    def long_call(self, S, K, Price):
+        # Long Call Payoff = max(Stock Price - Strike Price, 0)     # If we are long a call, we would only elect to call if the current stock price is greater than     # the strike price on our option
         P = list(map(lambda x: max(x - K, 0) - Price, S))
         return P
 
-    def long_put(self,S, K, Price):
-        # Long Put Payoff = max(Strike Price - Stock Price, 0)     # If we are long a call, we would only elect to call if the current stock price is less than     # the strike price on our option     
-        P = list(map(lambda x: max(K - x,0) - Price, S))
+    def long_put(self, S, K, Price):
+        # Long Put Payoff = max(Strike Price - Stock Price, 0)     # If we are long a call, we would only elect to call if the current stock price is less than     # the strike price on our option
+        P = list(map(lambda x: max(K - x, 0) - Price, S))
         return P
-    
-    def short_call(self,S, K, Price):
-        # Payoff a shortcall is just the inverse of the payoff of a long call     
+
+    def short_call(self, S, K, Price):
+        # Payoff a shortcall is just the inverse of the payoff of a long call
         P = self.long_call(S, K, Price)
         return [-1.0*p for p in P]
 
-    def short_put(self,S,K, Price):
-        # Payoff a short put is just the inverse of the payoff of a long put 
-        P = self.long_put(S,K, Price)
+    def short_put(self, S, K, Price):
+        # Payoff a short put is just the inverse of the payoff of a long put
+        P = self.long_put(S, K, Price)
         return [-1.0*p for p in P]
-    
+
     def update_current(self, direction, contract_type, contract_idx):
         """
         """
         self.current[direction][contract_type].add(contract_idx)
-        print("strategy_dict: ",self.current)
+        print("strategy_dict: ", self.current)
 
     def strategy_selector(self):
 
-        strats = [{"label": "Long Call", "value": self.long_call(S,K, Price)}]
+        strats = [{"label": "Long Call", "value": self.long_call(S, K, Price)}]
 
-    def create_option(self,direction,contract_type,strike,price,option_id,underlying):
+    def create_option(self, direction, contract_type, strike, price, impvol, option_id, underlying):
 
-        option = Option(direction,contract_type,strike,price,option_id,underlying)
+        option = Option(direction, contract_type, strike,
+                        price, impvol, option_id, underlying)
         return option
-    
-    def add_option_to_portfolio(self,option):
+
+    def add_option_to_portfolio(self, option):
         self.current_portfolio[option.option_id] = option
 
-    def remove_option_from_portfolio(self,option_id):
+    def remove_option_from_portfolio(self, option_id):
         del self.current_portfolio[option_id]
 
-    def option_to_text(self,option):
+    def option_to_text(self, option):
 
-        res = "%s $%s %s AT $%s"%(option.direction, option.strike, option.contract_type, option.price)
+        res = "%s $%s %s AT $%s" % (
+            option.direction, option.strike, option.contract_type, option.price)
         return res
 
-    
     def calculate_portfolio_payoff(self):
         """
         enumerate portfolio of options objects
@@ -209,56 +127,93 @@ class Strategies():
         e.g return [x+y for x,y in zip(F_1, F_2)]  or list(map(sum,zip(*[l1,l2,l3])))
         """
         lists = []
-        port_map = {"BC":1,"BP":2,"SC":3,"SP":4}
+        port_map = {"BC": 1, "BP": 2, "SC": 3, "SP": 4}
 
         for opt_id in self.current_portfolio:
             prefix = opt_id.split('_')[0]
             option = self.current_portfolio[opt_id]
-            S = [p for p in range(0,int(option.underlying*2))]
-            print("option %s, strike type: %s, price type: %s"%(option.option_id,type(option.strike),type(option.price)))
-            res = self.strategies_map[port_map[prefix]](S,option.strike,option.price)
+            S = [p for p in range(0, int(option.underlying*2))]
+            print("option %s, strike type: %s, price type: %s" %
+                  (option.option_id, type(option.strike), type(option.price)))
+            res = self.strategies_map[port_map[prefix]](
+                S, option.strike, option.price)
             lists.append(res)
-        
-        result = list(map(sum,zip(*lists)))
+
+        result = list(map(sum, zip(*lists)))
         return result
         #print("Payoff: ", result)
-    
-    def max_gain(self,payoff):
+
+    def max_gain(self, payoff):
 
         max_p = max(payoff)
 
-        if payoff[0] == max_p: #### Short Underlying
+        if payoff[0] == max_p:  # Short Underlying
             if payoff[2] < payoff[1] < payoff[0]:
                 return "Max Profit: Infinite"
             else:
-                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2))
-        elif payoff[-1] == max_p: ### Long Underlying
+                return "Max Profit: %s * 100 = %s" % (str(round(max_p, 2)), round(max_p*100, 2))
+        elif payoff[-1] == max_p:  # Long Underlying
             if payoff[-3] < payoff[-2] < payoff[-1]:
                 return "Max Profit: Infinite"
             else:
-                return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2))
+                return "Max Profit: %s * 100 = %s" % (str(round(max_p, 2)), round(max_p*100, 2))
         else:
-            return "Max Profit: %s * 100 = %s"%(str(round(max_p,2)),round(max_p*100,2))
-    def max_loss(self,payoff):
+            return "Max Profit: %s * 100 = %s" % (str(round(max_p, 2)), round(max_p*100, 2))
+
+    def max_loss(self, payoff):
 
         max_l = min(payoff)
 
-        if payoff[0] == max_l: #### Short Underlying
+        if payoff[0] == max_l:  # Short Underlying
             if payoff[2] > payoff[1] > payoff[0]:
                 return "Max Loss: Infinite"
             else:
-                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2))
-        elif payoff[-1] == max_l: ### Long Underlying
+                return "Max Loss: %s * 100 = %s" % (str(round(max_l, 2)), round(max_l*100, 2))
+        elif payoff[-1] == max_l:  # Long Underlying
             if payoff[-3] > payoff[-2] > payoff[-1]:
                 return "Max Loss: Infinite"
             else:
-                return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2))
+                return "Max Loss: %s * 100 = %s" % (str(round(max_l, 2)), round(max_l*100, 2))
         else:
-            return "Max Loss: %s * 100 = %s"%(str(round(max_l,2)),round(max_l*100,2))
+            return "Max Loss: %s * 100 = %s" % (str(round(max_l, 2)), round(max_l*100, 2))
+
+    def calculate_portfolio_greeks(self, curr_date, exp_date):
+
+        lists = []
+        r = 0.01
+        T = (parser.parse(exp_date) - curr_date).days/365
+        for opt_id in self.current_portfolio:
+            prefix = opt_id.split('_')[0]
+            option = self.current_portfolio[opt_id]
+            impvol = option.impvol.replace('%', '')
+            impvol = float(impvol)/100
+            S = [p for p in range(0, int(option.underlying*2))]
+
+            if prefix[1] == "C":
+                res = np.asarray(
+                    [calc_delta(s, option.strike, r, impvol, T, 0, "call") for s in S])
+
+            if prefix[1] == "P":
+                res = np.asarray(
+                    [calc_delta(s, option.strike, r, impvol, T, 0, "put") for s in S])
+
+            if prefix[0] == "S":
+
+                res = res*-1
+
+            lists.append(res)
+
+        result = list(map(sum, zip(*lists)))
+        print("GREEK RES: ", result)
+        return result
+
+    # S: underlying stock price # K: Option strike price # r: risk free rate
+    # # D: dividend value # vol: Volatility # T: time to expiry (assumed that we're measuring from t=0 to T)
+
 
 class Option():
 
-    def __init__ (self,direction,contract_type,strike,price,option_id,underlying):
+    def __init__(self, direction, contract_type, strike, price, impvol, option_id, underlying):
         """
         price = cost or premium. Maybe split into 2 params
 
@@ -268,5 +223,6 @@ class Option():
         self.contract_type = contract_type
         self.strike = float(strike)
         self.price = float(price)
+        self.impvol = impvol
         self.option_id = option_id
         self.underlying = float(underlying)
