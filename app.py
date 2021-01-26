@@ -133,7 +133,7 @@ def build_upper_left_panel():
                             ]),
 
                             html.P(stock.live_price_comment),
-                            html.P("Select Options Below"),
+                            html.P("Select Options Below", id="select-text-anim"),
                             dcc.Loading(children=html.Div(
                                 id="buy-calls-stats-container")),
                             dcc.Loading(children=html.Div(
@@ -189,6 +189,7 @@ app.layout = html.Div(
                                     id="loading",
                                     children=dcc.Graph(
                                         id="option-payoff-graph",
+                                        style={"display": "none"}
                                     ),
                                 ),
             
@@ -466,7 +467,7 @@ def update_strategy(strat):
 
 
 @app.callback(
-    [Output("dummy-output", "children"), Output("option-payoff-graph", "figure"),
+    [Output("dummy-output", "children"), Output("option-payoff-graph", "figure"),Output("option-payoff-graph", "style"),
     Output("option-greek-graph", "figure"), Output("option-greek-graph", "style")],
     [Input('buy-call-stats-table', 'selected_rows'), Input('sell-call-stats-table', 'selected_rows'),
      Input('buy-puts-stats-table',
@@ -563,6 +564,7 @@ def update_frontend_choices():
                                          ))
     print(['delete-%s' % (i)for i in strategy.current_portfolio])
     fig = {}
+    fig_style = {"display": "none"}
     fig_greeks = {}
     fig_greeks_style = {"display": "none"}
 
@@ -602,15 +604,19 @@ def update_frontend_choices():
                   xref="paper", yref="paper",
                   x=0.1,y=0.9,
                   showarrow=False)
+
+                
         greeks = strategy.calculate_portfolio_greeks(
             stock.current_date, stock.expiry_date)
         deltas_X = [p for p in range(0, int(stock.underlying*2))]
 
         fig_greeks = greek_subplots(greeks, deltas_X)
+
+        fig_style = {}
         fig_greeks_style = {}
 
 
-    return options_text_list, fig, fig_greeks, fig_greeks_style
+    return options_text_list, fig,fig_style, fig_greeks, fig_greeks_style
 
 def greek_subplots(greeks,X_axis):
 
