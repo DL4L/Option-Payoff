@@ -123,6 +123,8 @@ class Stock():
         puts = puts[p_range_lower:].reset_index()
         puts = puts[["Strike", "Change", "% Change",
                      "Bid", "Ask", "Implied Volatility"]]
+        put_deltas = self.get_deltas(puts, "put", expiry_date)
+        puts['delta'] = put_deltas
         print("Underlying Check", self.underlying)
         new_c_strike_index, new_p_strike_index = self.get_closests(
             calls, "Strike", self.underlying), self.get_closests(puts, "Strike", self.underlying)

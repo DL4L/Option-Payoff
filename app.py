@@ -5,6 +5,7 @@ import dash_html_components as html
 import plotly.graph_objs as go
 import plotly.express as px
 import plotly.io as pio
+from plotly.subplots import make_subplots
 from dash.dependencies import State, Input, Output, ALL
 from dash.exceptions import PreventUpdate
 
@@ -190,10 +191,7 @@ app.layout = html.Div(
                                         id="option-payoff-graph",
                                     ),
                                 ),
-                                html.Div(id="profit-loss-breakdown", children=[
-                                    html.P(id="max-gain"),
-                                    html.P(id="max-loss")
-                                ]),
+            
                             ],
 
                         ),
@@ -203,10 +201,15 @@ app.layout = html.Div(
                             children=[
                                 dcc.Loading(
                                     id="loading-2",
-                                    children=dcc.Graph(
+                                    children=[dcc.Graph(
                                         id="option-greek-graph",
                                         style={"display": "none"}
                                     ),
+                                        dcc.Graph(
+                                        id="option-greek-graph-gamma",
+                                        style={"display": "none"}
+                                        )
+                                        ],
                                 )
                             ],
                         ),
@@ -464,7 +467,7 @@ def update_strategy(strat):
 
 @app.callback(
     [Output("dummy-output", "children"), Output("option-payoff-graph", "figure"),
-     Output("max-gain", "children"), Output("max-loss", "children"), Output("option-greek-graph", "figure"), Output("option-greek-graph", "style")],
+    Output("option-greek-graph", "figure"), Output("option-greek-graph", "style")],
     [Input('buy-call-stats-table', 'selected_rows'), Input('sell-call-stats-table', 'selected_rows'),
      Input('buy-puts-stats-table',
            'selected_rows'), Input('sell-puts-stats-table', 'selected_rows'),
@@ -560,10 +563,8 @@ def update_frontend_choices():
                                          ))
     print(['delete-%s' % (i)for i in strategy.current_portfolio])
     fig = {}
-    fig_delta = {}
-    fig_delta_style = {"display": "none"}
-    max_gain = ""
-    max_loss = ""
+    fig_greeks = {}
+    fig_greeks_style = {"display": "none"}
 
     if options_text_list:
         ave_strike = sum(
@@ -593,16 +594,42 @@ def update_frontend_choices():
 
         max_gain = strategy.max_gain(payoff)
         max_loss = strategy.max_loss(payoff)
-
-        deltas = strategy.calculate_portfolio_greeks(
+        fig.add_annotation(text=max_gain,
+                  xref="paper", yref="paper",
+                  x=0.1,y=1,
+                  showarrow=False)
+        fig.add_annotation(text=max_loss,
+                  xref="paper", yref="paper",
+                  x=0.1,y=0.9,
+                  showarrow=False)
+        greeks = strategy.calculate_portfolio_greeks(
             stock.current_date, stock.expiry_date)
         deltas_X = [p for p in range(0, int(stock.underlying*2))]
-        fig_delta = px.line(x=deltas_X, y=deltas, template="plotly_dark")
-        fig_delta.update_yaxes(title_text="Delta")
-        fig_delta.update_xaxes(title_text="Underlying Price")
-        fig_delta_style = {}
 
-    return options_text_list, fig, max_gain, max_loss, fig_delta, fig_delta_style
+        fig_greeks = greek_subplots(greeks, deltas_X)
+        fig_greeks_style = {}
+
+
+    return options_text_list, fig, fig_greeks, fig_greeks_style
+
+def greek_subplots(greeks,X_axis):
+
+    fig_greeks = make_subplots(
+        rows=2, cols=2,
+        subplot_titles=("Delta", "Gamma", "Vega", "Theta"))
+
+    fig_greeks.add_trace(go.Scatter(x=X_axis, y=greeks['delta']),
+                row=1, col=1)
+
+    fig_greeks.add_trace(go.Scatter(x=X_axis, y=greeks['gamma']),
+                row=1, col=2)
+    fig_greeks.add_trace(go.Scatter(x=X_axis, y=greeks['vega']),
+                row=2, col=1)
+
+    fig_greeks.add_trace(go.Scatter(x=X_axis, y=greeks['theta']),
+                row=2, col=2)
+    fig_greeks.update_layout(showlegend = False, template="plotly_dark")
+    return fig_greeks
 
 
 """@app.callback(Output('dummy-output-2', 'style'),

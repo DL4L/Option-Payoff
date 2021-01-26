@@ -27,8 +27,25 @@ def calc_delta(S, K, r, vol, T, t, otype):
         delta = -np.exp(-(T-t))*norm.cdf(-d1)
 
     return round(delta, 2)
+def calc_gamma(S, K, r, vol, T, t, otype):
+    d1 = d1_calc(S, K, r, vol, T, t)
+    gamma = (norm.pdf(d1)) / (S * vol * np.sqrt(T-t))
+    return gamma
 
+def calc_vega(S, K, r, vol, T, t, otype):
+    d1 = d1_calc(S, K, r, vol, T, t)
+    return S * norm.pdf(d1) * np.sqrt(T-t)
 
+def calc_theta(S, K, r, vol, T, t, otype):
+    d1 = d1_calc(S, K, r, vol, T, t)
+    d2 = d1 - vol*np.sqrt(T-t)
+    
+    if(otype == "call"):
+        theta = -(S*norm.pdf(d1)*vol / (2*np.sqrt(T-t))) - r*K*np.exp(-r*(T-t))*norm.cdf(d2) 
+    elif(otype == "put"):
+        theta = -(S*norm.pdf(d1)*vol / (2*np.sqrt(T-t))) + r*K*np.exp(-r*(T-t))*norm.cdf(-d2)
+
+    return theta
 class Strategies():
 
     def __init__(self):
@@ -178,7 +195,8 @@ class Strategies():
             return "Max Loss: %s * 100 = %s" % (str(round(max_l, 2)), round(max_l*100, 2))
 
     def calculate_portfolio_greeks(self, curr_date, exp_date):
-
+        
+        result = {'delta':[],'gamma':[],'vega':[],'theta':[]}
         lists = []
         r = 0.01
         T = (parser.parse(exp_date) - curr_date).days/365
@@ -188,22 +206,36 @@ class Strategies():
             impvol = option.impvol.replace('%', '')
             impvol = float(impvol)/100
             S = [p for p in range(0, int(option.underlying*2))]
+            
+            gamma = np.asarray(
+                    [calc_gamma(s, option.strike, r, impvol, T, 0, "call") for s in S]) ### gamma for call/put the same
+            vega = np.asarray(
+                    [calc_vega(s, option.strike, r, impvol, T, 0, "call") for s in S])
 
             if prefix[1] == "C":
-                res = np.asarray(
+                delta = np.asarray(
                     [calc_delta(s, option.strike, r, impvol, T, 0, "call") for s in S])
-
+                theta = np.asarray(
+                    [calc_theta(s, option.strike, r, impvol, T, 0, "call") for s in S])
             if prefix[1] == "P":
-                res = np.asarray(
+                delta = np.asarray(
                     [calc_delta(s, option.strike, r, impvol, T, 0, "put") for s in S])
-
+                theta = np.asarray(
+                    [calc_theta(s, option.strike, r, impvol, T, 0, "put") for s in S])
             if prefix[0] == "S":
 
-                res = res*-1
+                delta = delta*-1
+                gamma = gamma*-1
+                vega = vega*-1
+                theta = theta*-1
 
-            lists.append(res)
-
-        result = list(map(sum, zip(*lists)))
+            result['delta'].append(delta)
+            result['gamma'].append(gamma)
+            result['vega'].append(vega)
+            result['theta'].append(theta)
+            #lists.append(res)
+        for key in result:
+            result[key] = list(map(sum, zip(*result[key])))
         print("GREEK RES: ", result)
         return result
 

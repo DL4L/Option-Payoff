@@ -133,11 +133,11 @@ td {
   height: 6000px;
   min-width: 1200px;
 }
-
+/*
 #geo-map-loading-outer {
   height: 60rem;
 }
-
+*/
 #geo-map {
   height: 55rem;
 }
