@@ -620,12 +620,18 @@ def update_frontend_choices():
 
 def greek_subplots(greeks,X_axis):
 
+    greeks_plot = {"delta":(1,1),"gamma":(1,2),"vega":(2,1),"theta":(2,2)}
+
     fig_greeks = make_subplots(
         rows=2, cols=2,
         subplot_titles=("Delta", "Gamma", "Vega", "Theta"))
 
     fig_greeks.add_trace(go.Scatter(x=X_axis, y=greeks['delta']),
                 row=1, col=1)
+    """
+    fig_greeks.add_shape(go.layout.Shape(type="line",x0=0, y0=greeks['delta'][int(stock.underlying)],
+                                        x1=int(stock.underlying),y1=greeks['delta'][int(stock.underlying)],line=dict(dash="dot"))
+                                        ,row=1,col=1)"""
 
     fig_greeks.add_trace(go.Scatter(x=X_axis, y=greeks['gamma']),
                 row=1, col=2)
@@ -635,6 +641,15 @@ def greek_subplots(greeks,X_axis):
     fig_greeks.add_trace(go.Scatter(x=X_axis, y=greeks['theta']),
                 row=2, col=2)
     fig_greeks.update_layout(showlegend = False, template="plotly_dark")
+
+    for key in greeks:
+            fig_greeks.add_shape(go.layout.Shape(type="line",x0=0, y0=greeks[key][int(stock.underlying)],
+                                        x1=int(stock.underlying),y1=greeks[key][int(stock.underlying)],line=dict(dash="dot"))
+                                        ,row=greeks_plot[key][0] ,col=greeks_plot[key][1])
+
+            fig_greeks.add_shape(go.layout.Shape(type="line",x0=int(stock.underlying), y0=0,
+                            x1=int(stock.underlying),y1=greeks[key][int(stock.underlying)],line=dict(dash="dot"))
+                            ,row=greeks_plot[key][0] ,col=greeks_plot[key][1])
     return fig_greeks
 
 
