@@ -74,9 +74,15 @@ input[type="radio"]:checked + .dash-select-cell {
   }
 
   to {
-    color: gray;
+    color: yellow;
     text-shadow: 0 0 20px #00fff2, 0 0 30px #00fff2, 0 0 40px #00fff2,
       0 0 50px #00fff2, 0 0 60px #00fff2, 0 0 70px #00fff2, 0 0 80px #00fff2,
       0 1 90px #00fff2;
   }
+}
+.dash-select-cell:before {
+  font-weight: bold;
+  -webkit-animation: glow 2s ease-in-out infinite alternate;
+  -moz-animation: glow 2s ease-in-out infinite alternate;
+  animation: glow 2s ease-in-out infinite alternate;
 }
