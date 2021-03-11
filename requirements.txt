@@ -42,3 +42,4 @@ w3lib==1.22.0
 websockets==8.1
 Werkzeug==1.0.1
 yahoo-fin==0.8.6
+html5lib==0.9999999
